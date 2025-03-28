@@ -92,3 +92,38 @@ print(p_val)
 sum(p_val<0.05)
 mean(p_val)
 
+
+##############
+
+library(readxl)
+library(dplyr)
+library(tidyr)
+library(lme4) # lmer
+library(glht) #nefunguje to!
+library(multcomp) # Attaching package: ‘MASS’, dplyr::select masked
+library(emmeans) # emmeans
+library(effects) # allEffects
+library(ggplot2)
+library(remotes)
+
+install.packages("ghlt")
+
+library(readxl)
+M <- read_excel("modely_data.xlsx", sheet = "MV")
+View(M)
+
+M <- M %>%
+  pivot_longer(MV0:MV48, names_to = "Time", values_to = "MV") %>%
+  mutate(Time = factor(gsub("MV", "", Time), levels = c(0,6,12,24,48)),
+         Replicate = factor(Replicate))
+
+boxplot(MV ~ Time, M)
+
+M <- M %>% mutate(MV_log = log10(MV))
+
+m1 <- lm(MV_log ~ Time, M)
+summary(m1)
+anova(m1)
+summary(glht(m1))
+emmeans(m1, pairwise ~ Time)
+
