@@ -174,5 +174,24 @@ ggplot(M, aes(x = Time_num, y = MV_log, colour = Replicate)) +
   theme(legend.position = "none") +
   geom_line(aes(y = predict(m3)), size=.25) 
 
+##########
+
+#Verze 4
+#random intercept a slop
+
+m4 <- lmer(MV_log ~ Time_num + (Time_num|Replicate), M)
+summary(m4)
+plot(allEffects(m4, resid = TRUE))
+plot(MV_log ~ Time_num,M)
+
+ggplot(m4, aes(x = Time_num, y = MV_log, colour = Replicate)) +
+  geom_point(size=3) +
+  theme(legend.position = "none") +
+  geom_line(aes(y = predict(m3)), size=.25) 
+
+
+
+
+
 
 
