@@ -98,15 +98,19 @@ mean(p_val)
 library(readxl)
 library(dplyr)
 library(tidyr)
-library(lme4) # lmer
-library(glht) #nefunguje to!
+library(lme4)# lmer
+library(lmerTest)
 library(multcomp) # Attaching package: ‘MASS’, dplyr::select masked
 library(emmeans) # emmeans
 library(effects) # allEffects
 library(ggplot2)
+library(nortest)  # normality testing 
+library(car)   # Levene test
+
+library(glht) #nefunguje to! - není to knihovna - je schována v "multcomp"
 library(remotes)
 
-install.packages("ghlt")
+
 
 library(readxl)
 M <- read_excel("modely_data.xlsx", sheet = "MV")
@@ -126,4 +130,49 @@ summary(m1)
 anova(m1)
 summary(glht(m1))
 emmeans(m1, pairwise ~ Time)
+
+
+########
+
+#Verze 2
+
+m2 <- lmer(MV_log ~ Time + (1|Replicate), M)
+anova(m2)
+summary(m2)
+emmeans(m2, pairwise ~ Time)
+
+#m2 <- lmer(MV_log ~ Time + (1|Replicate), M)
+#library(glht)
+#summary(glht(m2)) # comparison with reference category
+#library(emmeans)
+#emmeans(m2, pairwise ~ Time) # comparison of all pairs
+#emmeans(m2, consec ~ Time) # comparison of consecutive pairs
+
+########
+
+#Verze 3
+
+M <- M %>% 
+  mutate(Time_num = gsub("MV","",Time) %>% 
+           as.numeric())
+
+m3 <- lmer(MV_log ~ Time_num + (1|Replicate), M)
+summary(m3)
+plot(MV_log ~ Time_num,M)
+
+#Intercept - hodnota na baseline, hodnota říká její sklon MV_log: 0.82+0.03
+#Další vzájmená porovnání nemají v tomto případě význam
+
+#Zde ještě vizualizace:
+
+plot(allEffects(m3))
+plot(allEffects(m3, resid = TRUE))
+plot(allEffects(m3), multiline=TRUE, confint=TRUE, ci.style="bars")
+
+ggplot(M, aes(x = Time_num, y = MV_log, colour = Replicate)) +
+  geom_point(size=3) +
+  theme(legend.position = "none") +
+  geom_line(aes(y = predict(m3)), size=.25) 
+
+
 
